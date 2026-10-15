@@ -140,4 +140,11 @@ Track progress and summarize changes after completing major tasks.
   - Added strict credential protection (`.env`, `.env.*`, `!.env.example`, `*.key`, `*.pem`, `secrets.json`).
   - Added Python bytecode, `.pytest_cache/`, IDE (`.vscode/`, `.idea/`), and OS artifacts (`.DS_Store`, `Thumbs.db`).
 
+## 2026-10-15 - GitHub Repository Published
+- Initialized local Git repository on branch `main`.
+- Committed 91 files encompassing the entire GeoAI Swarm, Docker GeoStack, Streamlit frontend, and lesson blueprints.
+- Created and published the public repository via GitHub CLI:
+  - URL: [`https://github.com/atilioebg/geoai-bootcampgis-logistics-retail`](https://github.com/atilioebg/geoai-bootcampgis-logistics-retail)
+  - Pushed initial commit and set upstream tracking to `origin/main`.
+
 
