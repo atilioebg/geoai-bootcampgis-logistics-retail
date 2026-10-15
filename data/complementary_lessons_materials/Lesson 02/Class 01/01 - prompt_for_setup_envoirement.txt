@@ -1,0 +1,16 @@
+Act as a Senior GeoAI Engineer and initialize our new project workspace by executing the following steps systematically:
+
+1. Folder Structure: Create the base directory structure: src/agent/nodes, src/agent/state, src/agent/schemas, src/agent/tools, tests/unit, tests/integration, data/, data/lessons, data/lessons/Lesson 01, data/lessons/Lesson 02, data/lessons/Lesson 03, data/lessons/Lesson 04, data/lessons/Lesson 05, data/lessons/Lesson 06, data/lessons/Lesson 07, data/lessons/Lesson 08, data/lessons/Lesson 09, data/lessons/Lesson 10, and .agents/.
+
+2. Virtual Environment: Create a Python virtual environment named .venv, activate it, and create a requirements.txt file containing our core libraries: langgraph, langchain-google-genai, pydantic, pydantic-settings, python-dotenv, pytest, sqlalchemy, geoalchemy2, and psycopg2-binary. Install these dependencies in the virtual environment.
+
+3. Project Files: Create a .gitignore file (excluding .venv, .env, pycache, and data folders) and a .env.example file with placeholder variables for GEMINI_API_KEY, LANGCHAIN_API_KEY, and database connection strings.
+
+4. Agentic Directives: Create .agents/BUGS.md (for tracking issues) and .agents/LOGS.md (for your development journal).
+
+5. System Rules: Create .agents/AGENTS.md and populate it with these strict operational directives:
+	- Coding Standards: Always enforce Python type hints, comprehensive docstrings, and modular architecture.
+	- Security: Never hardcode secrets. Always use .env files and pydantic-settings.
+	- Dependency Management: You MUST update requirements.txt immediately whenever a library is installed or removed. 
+	- Testing Requirement: Every time you create or modify a function, node, or tool, you MUST automatically write or update the corresponding unit, integration, and security tests in the tests/ directory.
+	- Tracking: After completing any major task, summarize the changes in LOGS.md. Document any errors and their solutions in BUGS.md.

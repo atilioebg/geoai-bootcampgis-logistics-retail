@@ -1,0 +1,13 @@
+Act as a Senior GeoAI Software Engineer. We need to create our first standalone tool using the @tool decorator from LangChain.
+
+Please implement the following: 
+	1. Create a new file src/agent/tools/api_tools.py. 
+	2. Define an @tool named get_route_distance_time(origin: str, destination: str) -> dict:. 
+	3. Include a highly descriptive Python docstring explaining that this tool calculates the real driving distance and estimated time of arrival (ETA) between two text addresses using the Google Maps Directions API. 
+	4. Use the requests library to make the HTTP GET call. Safely load the GCP_API_KEY from os.getenv. 
+	5. Return a dictionary like {"distance": result, "duration": result, "source": "google_routes"}. Add robust error handling. 
+	6. Add a if __name__ == "__main__": block at the bottom so I can execute the script directly in the terminal to test it without an agent. 
+	7. Create a robust unit test suite in tests/unit/test_api_tools.py using pytest. You MUST use unittest.mock.patch to mock the requests.get call so we can test the tool's parsing logic without spending GCP API credits
+	
+	
+	

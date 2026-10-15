@@ -1,0 +1,13 @@
+Act as a Senior GeoAI Architect. We are continuing our Actor-Critic Swarm. Now we need the executor node.
+Please implement the following: 
+	1. Create src/agent/agents/worker.py. 
+	2. Import the 4 specialized tools we created in spatial_tools.py and rag_tools.py. 
+	3. Define a worker_node(state: SwarmState) -> dict. This node should use an LLM bound to these 4 tools (.bind_tools()). 
+	4. The Worker's system prompt must instruct it to: (a) Read the state["plan"]. (b) If there is state["review_feedback"], it must pay attention to the feedback to fix its previous mistake. (c) Execute the necessary tools to gather the data. (d) Based on the tool execution results, write a comprehensive preliminary answer to the user's original question. 
+	5. The node must extract this preliminary answer and return a dictionary updating draft_response in the state. 
+	6. Add a __main__ block to test the worker independently. Feed it a mocked state containing {"question": "Find geomarketing gaps...", "plan": ["find_geomarketing_gaps"]} and print the resulting draft_response to the terminal. 
+	7. Create a robust Pytest unit test suite in tests/unit/test_worker.py with mock LLMs to validate that the Worker correctly calls tools based on the plan and updates the draft_response. 
+	8. Include a comment or docstring explicitly stating the Graph Flow: The Worker is the engine of the swarm. It sits between the Planner and the Reviewer. It can be called multiple times if the Reviewer rejects its draft, making it the core of the self-healing loop. 
+	9. Upon finishing the code, present a summary highlighting: a Mermaid flowchart illustrating the Worker's cyclical position in the Swarm, the Worker's System Prompt, and an explanation of the dummy state used to test it in isolation.
+
+	

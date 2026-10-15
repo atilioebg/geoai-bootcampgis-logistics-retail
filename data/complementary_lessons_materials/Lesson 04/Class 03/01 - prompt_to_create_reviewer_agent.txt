@@ -1,0 +1,13 @@
+Act as a Senior GeoAI Architect. We are finalizing our Actor-Critic Swarm. We need the Reviewer node and the LangGraph compilation.
+Please implement the following:
+	1. Create `src/agent/agents/reviewer.py`. Define a Pydantic schema `ReviewerOutput` containing `review_status` (Enum: "approved", "rejected") and `review_feedback` (str).
+	2. Define `reviewer_node(state: SwarmState) -> dict`. This node uses an LLM with `.with_structured_output(ReviewerOutput)`.
+	3. The Reviewer's system prompt must instruct it to act as a strict manager. It must evaluate if the `state["draft_response"]` successfully answers the original `state["question"]`. Explicitly state in the prompt that the Reviewer is part of a self-healing loop with a MAXIMUM of 3 retries, so it must provide highly specific feedback to guarantee correction.
+	4. The node must return a dict updating `review_status`, `review_feedback`, and incrementing `loop_count` by 1.
+	5. Create a robust Pytest unit test suite in `tests/unit/test_reviewer.py` with 2 explicit tests using mock LLMs: Test 1 should validate the Reviewer approving a good draft. Test 2 should validate the Reviewer rejecting a bad draft, returning feedback, and incrementing the loop count.
+	6. Create `src/agent/swarm_graph.py`. Import the `SwarmState`, `planner_node`, `worker_node`, and `reviewer_node`.
+	7. Build the `StateGraph`: Add the 3 nodes. Add edges: `START -> planner -> worker -> reviewer`.
+	8. Add a conditional edge from the `reviewer`: If `review_status == "rejected"` AND `loop_count < 3`, route back to `"worker"`. Else, route to `END`.
+	9. Compile the graph and add a `__main__` block with an interactive `while True:` loop. In this script, we will run Test 3: an end-to-end live test in the terminal testing the full flow from Planner to Worker to Reviewer.
+	10. Upon finishing the code, present a summary highlighting: a Mermaid flowchart illustrating the complete Swarm Graph (showing the conditional loop), the Reviewer's System Prompt, and an explanation of the conditional edge logic.
+	

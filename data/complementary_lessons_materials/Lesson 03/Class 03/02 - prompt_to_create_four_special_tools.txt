@@ -1,0 +1,29 @@
+Use CoT (Chain of Thought) to refactor the tools src\agent\tools\spatial_tools.py and src\agent\tools\rag_tools.py to 4 new tool, accordingly to:
+
+Tool 1 - Logistics Location (Centroid & Snapping) 
+*"Act as a Senior GeoAI Engineer. We need to create a tool in src/agent/tools/spatial_tools.py to calculate the optimal location for a Distribution Center. 
+Please implement an @tool named calculate_optimal_logistics_hub(region_name: str) -> dict.
+Logic: Construct a PostGIS SQL query that aggregates the target region (ST_Union), calculates the demographic center of mass (ST_Centroid), and snaps this mathematical point to the nearest physical road from the geo_roads table using ST_ClosestPoint.
+Execution: Since we do not have the live DB yet, create a dummy helper function execute_mock_db_query(query: str) that prints the exact SQL generated and returns a mocked JSON coordinate (e.g., {"lat": 27.95, "lon": -82.45, "nearest_road": "I-4"}). Ensure the docstring is extremely detailed, stating it solves Logistics Location, Centroid Snapping, and Facility Placement."*
+
+Tool 2 - Geomarketing Gap Analysis (Blue Ocean Strategy) 
+*"Act as a Senior GeoAI Engineer. We need to create a second tool in src/agent/tools/spatial_tools.py to find 'Blue Ocean' territories. Please implement an @tool named find_geomarketing_gaps(target_income: float, radius_km: float) -> dict.
+Logic: Construct a PostGIS SQL query that filters census tracts where income > target_income. Then, perform a spatial anti-join (NOT ST_Intersects or ST_Disjoint) crossing these rich tracts with a dynamic ST_Buffer (using radius_km) created around competitor locations (from Google Places).
+Execution: Pass the constructed SQL to execute_mock_db_query(query) and return a mocked list of 3 viable census tracts. Ensure the docstring explicitly states this tool handles Geomarketing Expansion, Gap Analysis, and Spatial Intersections."*
+
+Tool 3 - Semantic Review Search (Vibe Search / pgvector) 
+*"Act as a Senior GeoAI Engineer. We need to create a tool in src/agent/tools/rag_tools.py to perform NLP search on customer reviews. Please implement an @tool named search_semantic_reviews(vibe_intent: str, limit: int = 5) -> dict.
+Logic: Assume vibe_intent is converted to an embedding vector [0.1, 0.5, ...]. Construct a pgvector SQL query using the cosine similarity operator (<=>) to calculate the mathematical distance between the user's intent vector and the pre-computed review vectors in the database, ordered by distance (ORDER BY vector <=> query_vector LIMIT x).
+Execution: Create a dummy helper execute_mock_vector_search(query: str) that prints the query and returns a mocked list of 2 restaurants matching the vibe. Ensure the docstring states this tool handles Semantic Search, NLP, vibes, and similarity matching."*
+
+Tool 4 - Infrastructure Graph Routing (Apache AGE) & Agent Binding 
+*"Act as a Senior GeoAI Engineer. We need to create the final tool in src/agent/tools/rag_tools.py for routing, and then bind all 4 tools to our agent. Please implement an @tool named find_infrastructure_shortest_path(start_node: str, end_node: str) -> dict.
+Logic: Construct a Cypher query for Apache AGE using MATCH p=shortestPath((a:Intersection)-[*]-(b:Intersection)) to traverse the road network and find the most efficient topological route between the logistics node and the target node.
+Execution: Create a dummy helper execute_mock_cypher(query: str) that prints the query and returns a mocked sequence of 3 street names forming a route.
+
+Integration & Testing:
+Update the main agent script (src/agent/hello_world.py) to .bind_tools() with all 4 of these tools.
+Update the System Prompt to map the 4 distinct intents to these 4 tools.
+Ensure the creation of a detailed docstring
+Ensure the __main__ execution block contains an interactive while True: loop with input() to test typing live questions.
+Create a Pytest suite (tests/unit/test_database_tools.py) simulating the agent receiving the 4 core project questions. Assert that the agent successfully routes and extracts the correct parameters for each specific tool."*

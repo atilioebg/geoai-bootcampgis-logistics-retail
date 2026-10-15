@@ -1,0 +1,12 @@
+Act as a Senior GeoAI Architect. We need to validate our database engine (CRUD tests)
+	1. Open `src/agent/db_engine.py`.
+	2. Import SQLAlchemy ORM components (Session, declarative_base, Column, Integer, String) and `Geometry` from `geoalchemy2` at the top.
+	3. Define an ORM model `class CoffeeShop(Base):` with `__tablename__ = 'coffee_shops'`. Add `id` (Integer, primary_key), `name` (String), and `geom` (Geometry('POINT', srid=4326)).
+	4. Inside the `if __name__ == "__main__":` block, after the `DBEngine` instantiation, add the CRUD logic. First, create the table (`Base.metadata.create_all`).
+	5. **Step 1 (Insert/Inclusão):** Use a SQLAlchemy session to insert a new `CoffeeShop` named 'GeoCafe' at POINT(-82.4572 27.9506) (Tampa, FL).
+	6. **Step 2 (Update/Alteração):** Query the database using the ORM to fetch 'GeoCafe'. Change its name to 'GeoCafe Premium' and commit.
+	7. **Step 3 (Delete/Remoção):** Query 'GeoCafe Premium', print its ID and raw WKT geometry (`ST_AsText(geom)`), then delete it from the database and commit.
+	8. Create comprehensive tests in `tests/integration/test_crud_workflow.py` covering unit validation, integration flows, and security edge-cases for these spatial CRUD operations.
+	9. Scan the entire project and rewrite the root `README.md` to document the complete GeoStack architecture, the Docker commands, the `DBEngine` SQLAlchemy implementation, and the entire project.
+	10. Output the terminal commands to execute the script (`python -m src.agent.db_engine`) and to run the test suite (`pytest tests/`).
+

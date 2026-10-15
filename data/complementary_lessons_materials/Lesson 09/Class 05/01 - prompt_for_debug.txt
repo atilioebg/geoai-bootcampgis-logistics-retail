@@ -1,0 +1,19 @@
+Use Chain of Thought (CoT) to analyze the user's question, the agent's answer, the complementary content returned as output, and the uploaded images. Compare them against the points to analyze to find bugs, and then correct them.
+
+	Images: [Take screenshots of the front-end if necessary and paste them here]
+
+	Question: [Past the front-end question here]
+
+	Answer: [Past the agent's answer here]
+
+	Output: [Paste the front-end complementary content, such as JSON, here]
+
+	Points to analyze:
+
+		Validate: [Here you describe the points that look correct and you want to confirm]
+			1.1
+			1.2
+
+		Correct: [Here you describe the points that you identified as bugs and need correction]
+			2.1
+			2.2

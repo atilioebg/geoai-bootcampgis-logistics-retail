@@ -1,0 +1,49 @@
+Handled by spatial_tools (Logistics & Expansion)
+	1. Logistics Location (Centroid & Snapping):
+		- Considering the demographic data of Tampa, what is the optimal location (central coordinate) to install a new Distribution Center that sits at the demographic center of mass of the population, and what is the nearest arterial road to place this facility?
+		- How calculate:
+			O objetivo: Achar o melhor lugar para um Centro de Distribuição e colocá-lo numa estrada real.
+			Dados Necessários:
+			Malha de Polígonos de Setores Censitários (Census Tracts) com a coluna de População.
+			Malha de Linhas das vias (tabela geo_roads).
+			Operações (PostGIS):
+			Agregação Espacial: Usa-se ST_Union ou ST_Collect para juntar todos os bairros alvos numa geometria única.
+			Cálculo do Centróide: Usa-se ST_Centroid() nessa geometria unificada. Isso gera um ponto central (coordenada X, Y). O problema é que esse ponto pode cair no meio de um lago ou em cima de uma casa.
+			Snapping (Ancoragem): Usa-se a função ST_ClosestPoint() comparando o Ponto do Centróide com as linhas da tabela geo_roads. Isso puxa o ponto matemático para a estrada física mais próxima, garantindo acesso logístico.
+
+	2. Geomarketing Gap Analysis (Blue Ocean Strategy):
+		- What are the high-income census tracts in Tampa that represent a 'Blue Ocean', meaning the average household income is above $80,000, but there are no competitor coffee shops within a 2km radius?
+		- How calculate:
+			O objetivo: Achar bairros ricos que não tenham concorrência.
+			Dados Necessários:
+			Malha de Setores Censitários com a coluna de Renda Média (Income).
+			Pontos (coordenadas) dos Concorrentes (obtidos via Google Places API).
+			Operações (PostGIS):
+			Filtro de Atributo: Um SELECT clássico para pegar apenas polígonos onde renda > 80000.
+			Criação da Área de Influência: Usa-se ST_Buffer() nos pontos dos concorrentes para desenhar um "raio de atuação" (ex: 2km) ao redor de cada loja.
+			Intersecção / Anti-Join (A Mágica): Usa-se NOT ST_Intersects() (ou ST_Disjoint) para comparar a malha de bairros ricos com os raios de influência. O banco de dados cospe apenas os bairros que estão fora dos círculos da concorrência.
+
+Handled by rag_tools (Semantics & Infrastructure)
+	3. Semantic Review Search (Vibe Search / pgvector):
+		- Which restaurants or points of interest near the Tampa waterfront have customer reviews highlighting an 'excellent environment for remote work with good connection' or 'fair prices'?
+		- How calculate:
+			Dados Necessários:
+			Textos puros (strings) dos Reviews dos clientes (obtidos via Google Places API).
+			Um Banco Vetorial (pgvector ativado no Postgres).
+			Operações (pgvector):
+			Vetorização da Carga: Os textos dos reviews precisam ser transformados em listas de números flutuantes (embeddings) através de um modelo de linguagem (ex: API de Embeddings do Google) e salvos no banco.
+			Vetorização da Pergunta: Quando o usuário pede "ambiente bom para trabalho remoto", nós pegamos essa frase do usuário e transformamos em um vetor também.
+			Cálculo de Distância: No SQL, usamos o operador de Similaridade de Cosseno (<=>). O banco calcula a distância matemática entre o vetor da pergunta do usuário e milhões de vetores de reviews no banco, ordenando do mais próximo ao mais distante (ORDER BY vector <=> query_vector LIMIT 5).
+				
+	4. Infrastructure Graph Routing (Topological / Apache AGE):
+		- Considering the road node of our newly proposed Logistics Center and the road node of the highest-income census tract, what is the shortest path through the infrastructure network connecting these two points?
+		- How calculate:
+			Dados Necessários:
+			Tabela de Vértices (Nós/Esquinas).
+			Tabela de Arestas (Segmentos de rua conectando as esquinas). (Isso requer a extensão Apache AGE ou pgRouting no Postgres).
+			Operações (Grafos/Cypher):
+			Identificação dos Nós Extremos: Descobre-se qual é o 'Nó A' (Centro Logístico da Q1) e o 'Nó B' (Bairro Rico da Q2).
+			Algoritmo de Dijkstra / A:* O algoritmo varre a teia de ruas, somando os "pesos" (distância em metros ou tempo em segundos) de cada aresta.
+			Cypher Query: Usa-se uma linguagem de grafos (ex: MATCH p = shortestPath((a:Intersection)-[*]-(b:Intersection))) para pedir ao banco que retorne a sequência exata de ruas que somam o menor peso entre A e B.
+
+=================================================

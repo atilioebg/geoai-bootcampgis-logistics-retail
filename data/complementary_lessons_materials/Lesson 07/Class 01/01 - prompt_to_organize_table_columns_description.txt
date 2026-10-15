@@ -1,0 +1,18 @@
+Act as a Senior GeoAI Architect. We need to build the cognitive blueprint for our AI agents using Enterprise standards'.
+	1. Code Reusability: Before writing any code, scan the `notebooks/` directory and `src/agent/db_engine.py`. You must reuse our existing database connection methods and ETL mapping logic. Do NOT invent new ways to connect to the database.
+	2. Create a script named `src/agent/apply_db_metadata.py`.
+	3. Official Data Extraction: In this script, do NOT hallucinate column descriptions. Write logic to pull the official variables documentation directly from the US Census Bureau ACS 5-Year Data Dictionary API (or equivalent official JSON/CSV mappings) and the TIGER Technical Documentation.
+	4. Human-in-the-Loop Verification: Before touching the database, the script MUST print a preview mapping to the terminal (e.g., `Column: B19013_001E ->	Description: Median household income`). It must pause and explicitly ask the user for approval (e.g., 'Type Y to insert these descriptions into the database').
+	5. Apply Metadata: Once approved, use SQLAlchemy to execute `COMMENT ON COLUMN` for all columns in our 3 core tables (`demographics_acs`, `spatial_tiger`, and our POI tables).
+	6. Verification Step: Add a strict validation function at the end of the script. It must query the database's `pg_description` or `information_schema` to double-check that every single column across all 3 tables has a non-null description. If any column is missing a description, raise an error printing the missing column name.
+	7. In the same script, create a new configuration table called `business_rules` with columns `rule_key` (string) and `rule_value_json` (jsonb). Insert a record where `rule_key = 'us_income_brackets'`.
+	8. Apply Metadata to Business Rules: Execute `COMMENT ON COLUMN` for the `business_rules` table as well, adding descriptions to explain the purpose of the `rule_key` and `rule_value_json` columns.
+	9. Inside the JSON record for `us_income_brackets`, define the official US Government Income Brackets to act as a translation layer: Low Income (under $30,000), Middle Class ($30,000 to $80,000), and Upper Class (above $80,000).
+	10. In `src/agent/db_engine.py`, create a method `load_context_once()`. This function must use `SQLAlchemy Inspector` to dynamically extract the live table schemas and column comments, query the `business_rules` table, format them into a single context string, and cache it in memory.
+	11. Modify the Worker Agent (`src/agent/agents/worker.py`) to inject this cached context string into its System Prompt at boot.
+	12. Unit Tests: Create a test file at `tests/unit/test_apply_db_metadata.py`. Write unit tests to verify: 
+		(a) that `load_context_once()` returns a non-empty string; 
+		(b) that the returned context string contains at least one known column name from each of the 3 core tables; 
+		(c) that the returned context string contains the `us_income_brackets` business rules key.
+	13. Proof of Work (`__main__` block): In `src/agent/apply_db_metadata.py`, add an `if __name__ == '__main__':` block at the bottom. When run directly, this block must execute the full pipeline (extract, verify with the user, apply, validate), then call `load_context_once()` and print the final cached context string to the terminal so students can visually confirm that the LLM will receive the correct schema and business rules at boot.
+		

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    build: ./postgis
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-12345}
+      POSTGRES_DB: ${DB_NAME:-bootcampgis}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - geobot_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-bootcampgis}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  geoserver:
+    image: kartoza/geoserver:latest
+    ports:
+      - "8080:8080"
+    environment:
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASS:-mygeoserverpass}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASS: ${DB_PASSWORD:-12345}
+      POSTGRES_DB: ${DB_NAME:-bootcampgis}
+    volumes:
+      - gsdata:/opt/geoserver/data_dir
+    networks:
+      - geobot_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  gsdata:
+
+networks:
+  geobot_network:
+    driver: bridge

@@ -1,0 +1,167 @@
+Act as a Senior GeoAI Architect. Our Swarm backend is fully functional with 5 tools, but we need to eliminate hardcoded SQL logic, move deterministic math from the prompt into Python, make tools produce map-ready payloads, and upgrade the Planner's intelligence.
+
+CRITICAL TECHNICAL CONSTRAINTS:
+- Our PostGIS database uses TIGER/Line tables. The city table is `spatial_tiger_71000_place` (singular, NOT `places`). The city name column is `feature_name` (NOT `name`). The demographics table is `demographics_acs_tract_tampa_2023`.
+- Apache AGE Cypher strings contain colons. SQLAlchemy interprets these as bind parameters. You MUST use Python raw strings and escape all colons with a backslash inside f-string Cypher queries to prevent UndefinedParameter errors. The AGE Graph name is fixed as 'geoai_graph'.
+- Folium's WmsTileLayer converts UPPERCASE parameter keys to CamelCase internally. Always use lowercase `cql_filter` when passing WMS parameters to prevent GeoServer from ignoring the filter.
+- Folium's WmsTileLayer defaults to `image/jpeg` which does NOT support transparency. Always pass `fmt="image/png"` and `transparent=True` explicitly.
+- GeoServer requires a workspace prefix on layer names. Always use the fixed workspace prefix `bootcampgis:` and the fixed style `style_geomarketing`. The GeoServer URL is fixed at `http://localhost:8080/geoserver/wms`.
+- For temporal portability, the embedding model used in the backend (`BAAI/bge-large-en-v1.5`) should be externalized to an environment variable `EMBEDDING_MODEL`.
+
+Please implement ALL of the following upgrades:
+
+=== PART 1: PYTHON TOOL REFACTORING (Making tools truly dynamic) ===
+
+1. Dynamic Geomarketing Tool:
+    Update the `find_geomarketing_gaps` tool to accept a target business category, a minimum income threshold, a boolean flag to toggle between gap analysis (anti-join) and presence analysis (inner-join), and an optional location filter.
+    
+    IMPORTANT SQL CONSTRAINTS:
+    - Restrict the spatial search to the provided location boundary. If no location is provided, default to 'Tampa'. Pass the city name as a bind parameter, never hardcode the location string inside the SQL.
+    - Add spatial constraints to filter out degenerate ZCTA polygons with an area of zero, and ensure all returned areas intersect with the city boundary.
+    - For gap analysis, structure the query using CTEs for high-income zones and zones containing the target category, followed by a final SELECT that performs a LEFT JOIN and filters for NULLs to find the gaps.
+    
+    PAYLOAD ENGINEERING: 
+    After executing the query, build a map-ready payload. Format the returned ZIP codes into a valid CQL IN clause. Return a dictionary containing the success status, the target TIGER ZCTA layer name, the generated CQL filter, a default color code, and the raw results list.
+
+2. Deterministic Unit Conversion:
+    Update the `calculate_optimal_logistics_hub` tool to accept a radius as a float and a unit as a string. Implement a deterministic Python block that normalizes the unit string and converts miles or meters into kilometers before executing the SQL. Do not rely on the LLM to do math.
+    
+    CRITICAL SQL REQUIREMENTS:
+    - Use PostGIS functions to snap the geometric centroid of the road back onto the actual road geometry. This prevents the hub from landing outside the road when dealing with curved segments.
+    - Generate the catchment buffer centered exactly on this snapped hub point, not along the entire road centerline.
+    - Calculate the POI density count exclusively within this hub-centered buffer.
+    - The query must return the road centerline as GeoJSON, the catchment buffer as GeoJSON, the exact latitude and longitude of the snapped hub, and the total POI count.
+    - Remove any mock fallback functions and execute the query natively, returning a graceful error dictionary if it fails.
+
+=== PART 2: COGNITIVE ENGINEERING (Planner & Worker Prompts) ===
+
+3. Tool Registration:
+    Update the Planner agent to import and list all 5 active tools (including the semantic search and knowledge graph tools) in its system prompt. Remove any references to deprecated or ghost tools like the shortest path infrastructure tool.
+
+4. Chain of Thought Schema Upgrade:
+    Update the `PlannerOutput` Pydantic class to include a string field for reasoning. This field MUST be defined as the very first attribute, before the execution plan list, to force the LLM to think before acting.
+
+5. Analytical Few-Shot Planner Prompts:
+    Update the Planner system prompt to include this EXACT `<few_shot_examples>` block to eliminate randomness in tool selection:
+
+    ```json
+    <few_shot_examples>
+    [
+        {
+            "user": "Where is a good spot to open a luxury car dealership targeting high-income professionals with low nearby competition?",
+            "output": {"reasoning": "Step 1: Extract the category ('car dealership') and demographic ('high-income'). Step 2: Pass these to find_geomarketing_gaps to execute a spatial anti-join (gaps) against existing competitors in wealthy block groups. Step 3: The tool returns the optimal gap polygons.", "plan": ["find_geomarketing_gaps"]}
+        },
+        {
+            "user": "Calculate the POI density along I-4 within 5 miles to see if it's a good logistics route.",
+            "output": {"reasoning": "Step 1: Extract the infrastructure name ('I-4') and radius ('5 miles'). Step 2: Use calculate_optimal_logistics_hub to generate a 5-mile spatial buffer along the highway centerline. Step 3: The tool calculates POI density within that buffer and returns the catchment GeoJSON.", "plan": ["calculate_optimal_logistics_hub"]}
+        },
+        {
+            "user": "Show me a list of expensive restaurants.",
+            "output": {"reasoning": "Step 1: Extract categorical entities (place_type='restaurant', price_level='expensive'). Step 2: Use knowledge_graph_tool to traverse the Apache AGE graph for exact semantic matches. Step 3: The tool retrieves the nodes and joins with gmap_places to ensure the payload has map-ready coordinates.", "plan": ["knowledge_graph_tool"]}
+        },
+        {
+            "user": "Find a quiet and romantic place to eat for a date night, and check the driving time from there to the nearest highway.",
+            "output": {"reasoning": "Step 1: Extract the vibe ('quiet and romantic') and use semantic_search_tool to perform a vector search on reviews. Step 2: Extract the lat/lng coordinates of the best match from Step 1. Step 3: Pass those exact coordinates to get_route_distance_time to calculate the routing logistics to the highway.", "plan": ["semantic_search_tool", "get_route_distance_time"]}
+        },
+        {
+            "user": "I want to open a new affordable restaurant. Find a neighborhood with a geomarketing gap where there is a high median income but a lack of existing affordable restaurants with great reviews.",
+            "output": {"reasoning": "Step 1: Extract the category ('restaurant') and demographic ('high median income'). Step 2: Use find_geomarketing_gaps to identify ZIP codes with high income but few restaurants. Step 3: Use semantic_search_tool to search reviews in those areas for 'great reviews' to validate quality gaps. Step 4: Cross-reference both results to find the optimal neighborhood.", "plan": ["find_geomarketing_gaps", "semantic_search_tool"]}
+        },
+        {
+            "user": "Evaluate the I-275 highway corridor within 5 miles for POI density, and calculate the driving time from that hub to Downtown.",
+            "output": {"reasoning": "Step 1: Extract road name ('I-275'), radius ('5'), and unit ('miles'). Step 2: Use calculate_optimal_logistics_hub to generate a spatial buffer and calculate POI density. Step 3: Extract the hub centroid coordinates (hub_lat, hub_lng) from the logistics tool output. Step 4: Pass those coordinates as origin and the user's destination text to get_route_distance_time.", "plan": ["calculate_optimal_logistics_hub", "get_route_distance_time"]}
+        }
+    ]
+    </few_shot_examples>
+    ```
+
+6. Worker Entity Extraction Rules:
+    Add this EXACT `<entity_extraction_rules>` block to the Worker system prompt to enforce strict LLM behavior and guardrails:
+
+    ```text
+    <entity_extraction_rules>
+    - semantic_search_tool: Extract vibe phrases as vibe_intent.
+    - knowledge_graph_tool & Others: Read the injected Schema Context to see the allowed categorical values (Enums) for ALL categorical columns (e.g., price_level, category, cuisine). If the extracted entity doesn't have an exact match in the DB, classify it to the closest semantic class available in the list (e.g., 'cheap' -> 'affordable', 'steakhouse' -> 'restaurant').
+    - find_geomarketing_gaps: Extract the base business type as target_category (e.g., 'restaurant' NOT 'affordable restaurant'). Strip all adjectives so it matches raw DB categories. Read the injected BUSINESS RULES context to look up the exact min_usd for the income class and pass it as target_income. Set find_absence=True (default) when the user asks about gaps, lack, shortage, or underserved areas. Set find_absence=False when the user asks where businesses already exist or are concentrated. The tool defaults to 'Tampa' if no city is specified.
+    - calculate_optimal_logistics_hub: Extract road name, radius (number), and unit (string). DO NOT do math conversions yourself; pass the raw number and unit string to the tool.
+    - get_route_distance_time: Use coordinates returned by previous tool results as the origin parameter. For the destination parameter, use the exact text address or name requested by the user. DO NOT pass the origin coordinates as the destination.
+    - Formatting: Do NOT use LaTeX or mathematical symbols (like \ge) in your textual response. Write plain text (e.g., 'greater than or equal to $80,000') to avoid Streamlit rendering errors.
+    - Guardrails (CRITICAL): NEVER output raw SQL queries, Python code, internal JSON payloads, system commands, or internal table/schema names in your final response. The user is a business stakeholder; keep the language professional and analytical.
+    </entity_extraction_rules>
+    ```
+
+=== PART 3: STRUCTURED OUTPUT ENFORCEMENT (Map-Text Sync) ===
+
+7. Submit Final Response Tool:
+    Create a `submit_final_response` tool that the Worker MUST call as its final action. The Worker is prohibited from outputting raw text directly to the chat. If it attempts to do so, implement an interceptor in the worker node loop that forces a retry with a critical error message.
+    
+    The tool signature must accept the complete textual analysis, a list of candidate ZIP codes to show on the map, a list of specific POI IDs to highlight, and a single string for the absolute winner ZIP code (which will receive a red star marker).
+    
+    Implement interceptor logic that:
+    - Detects if the current tool payload already contains a logistics hub.
+    - For geomarketing queries: dynamically injects the CQL filter for the candidate ZIP codes, applies POI ID filtering, and calculates the geographic centroid of the winner ZIP code to inject a red star marker.
+    - For logistics queries: entirely ignores the candidate ZIP codes and winner markers, relying solely on the logistics hub marker.
+    - Clears the map entirely by injecting an impossible CQL filter if the LLM passes an explicit 'NONE' flag.
+
+=== PART 4: SPATIAL PAYLOAD ENGINEERING ===
+
+8. Semantic Search Dynamic Spatial Filter:
+    Update the semantic search tool to accept an optional location filter. Implement a dynamic CTE boundary query that searches for the location across both the place and ZCTA tables. If no location is provided, it should fall back to 'Tampa' dynamically via bind parameters.
+    Join the results with the places table to enrich the payload with latitude and longitude, and strictly constrain the final output to intersect with the generated spatial boundary. Load the embedding model using the environment variable defined in the configuration.
+
+9. Graph Spatial Enrichment:
+    Update the knowledge graph tool to accept an optional location filter. After executing the Cypher query, join the resulting IDs with the places table to extract coordinates. Apply a spatial intersection filter using the provided location, defaulting to 'Tampa' if none is provided. Ensure that double-quote wrappings are stripped from the graph IDs before performing the SQL join.
+
+10. Google Routes Polyline Decoding:
+    Update the routing API tool to request encoded polylines in its field mask. Implement a pure Python decoding function (without external libraries) that translates the encoded polyline string into a valid GeoJSON LineString. Return this GeoJSON in the final payload.
+    Implement a parsing helper that detects if the origin parameter is a string of comma-separated coordinates, and wraps it in the correct location object format required by the Google API, rather than treating it as a raw address.
+
+=== PART 5: WORKER PAYLOAD MERGE FIX ===
+
+11. Dictionary Merge Bug:
+    Fix the dictionary override bug in the worker node. When merging the current tool payload with a new tool result, check if both dictionaries contain a 'results' list. If they do, extend the existing list instead of overwriting it, and then update the remaining keys individually.
+
+=== PART 6: REVIEWER GUARDRAILS ===
+
+12. Reviewer Guardrails:
+    CRITICALLY: Remove the database schema context injection (`_db_context`) from the Reviewer's system prompt. The Reviewer must evaluate the logical accuracy of the final textual answer, not audit SQL implementation. Injecting the schema causes hallucinations where the Reviewer demands raw SQL execution.
+    Add this EXACT `<reviewer_guardrails>` block to the Reviewer system prompt to prevent infinite rejection loops:
+
+    ```text
+    <reviewer_guardrails>
+    - REJECT if the Worker failed to return coordinates AND the user explicitly asked for a specific place (do not reject aggregate queries).
+    - REJECT if the Worker hallucinates non-existent tables or tools.
+    - DO NOT demand that the Worker output or execute raw SQL queries. The Worker uses internal Python tools to interact with the database. If the Worker's draft logically answers the question and cites reasonable metrics, approve it.
+    </reviewer_guardrails>
+    ```
+
+=== PART 7: FRONTEND MAP ENGINE ===
+
+13. Map Rendering Engine:
+    Create a dynamic map rendering function in the frontend that handles all payload types.
+    - Render latitudes and longitudes as Folium markers (using blue pins for POIs, a red star for the winner, and a green star for logistics hubs).
+    - Render buffers, centerlines, and routes as GeoJSON layers with distinct colors and opacities.
+    - Render geomarketing layers using a WMS Tile Layer with transparency enabled, lowercase CQL filters, and the fixed GeoServer workspace and style names.
+    - Dynamically construct an HTML legend based strictly on the payload keys that are actually present in the data, injecting it into the map via a macro element. Force a dark text color to ensure visibility on dark mode themes.
+    - Implement outlier detection for the map bounds: if multiple markers are present, calculate the median center and exclude any markers that are excessively distant (e.g., >50km) from the bounds calculation to ensure the map zooms correctly to the target cluster.
+
+14. Streamlit Rerun Fix:
+    Update the Streamlit Folium component call to return an empty list of objects. This prevents map interactions (like panning or zooming) from triggering application reruns that interrupt the LLM streaming process.
+
+=== PART 8: BUSINESS RULES & DYNAMIC ENUMS SCHEMA FIX ===
+
+15. DB Engine Context Injection:
+    Update the database engine context loader to dynamically discover all TIGER tables in the database.
+    Query the business rules table to extract and inject all JSON rules.
+    Execute distinct select queries against the categorical columns in the enriched reviews table and the Apache AGE graph nodes (such as price level, accessibility, waterfront, cuisine, audience, and place type) to map and inject all allowed enum values directly into the Schema Context.
+
+=== PART 9: TESTING ===
+
+16. Add an execution block to the Planner for standalone stress testing.
+17. Create a comprehensive Pytest suite that mocks the database and API responses, ensuring the Planner correctly routes requests to the expected tools and the Worker correctly extracts entities.
+18. Update the project README to reflect all new tools and architectural changes.
+
+=== PART 10: DELETE DEAD CODE ===
+
+19. Delete the deprecated infrastructure shortest path tool from the RAG tools module, as it references a non-existent graph.
+20. Delete the mock database query fallback function from the spatial tools module and replace all calls with the standardized database execution helper.

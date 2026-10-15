@@ -1,0 +1,13 @@
+Act as a Senior GeoAI Architect. We need to prepare our local environment for the ETL pipeline that will run on Kaggle
+Please implement the following:
+	1. Create a new directory named `notebooks/` and a subdirectory `notebooks/kaggle_deploy/` at the root of the project (`BOOTCAMPGIS_GEOAI/`).
+	2. Update the `BOOTCAMPGIS_GEOAI/.env` file. Add the following geographic filter variables required for the Census API (with the comments #): 
+		CENSUS_YEAR=2023
+		TARGET_STATE=12 	# Florida
+		TARGET_COUNTY=057 	# Hillsborough County
+		TARGET_PLACE=71000  # Tampa City
+		KAGGLE_TUNNEL_URL=  # leave empty locally
+		KAGGLE_API_TOKEN=
+	3. Reorganize the `.env` file logically into sections if needed.
+	4. Activate the `.venv` inside `BOOTCAMPGIS_GEOAI` and install the following data processing and NLP libraries for local testing ONLY: `pip install pandas numpy geopandas sentence-transformers rake-nltk unidecode tqdm`. (Do NOT install GPU/Kaggle-specific libraries like unsloth or xformers).
+	5. After installation, update the `BOOTCAMPGIS_GEOAI/requirements.txt` file by running `pip freeze > requirements.txt` to capture the exact versions of all installed libraries.

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor version="1.0.0"
+  xsi:schemaLocation="http://www.opengis.net/sld StyledLayerDescriptor.xsd"
+  xmlns="http://www.opengis.net/sld"
+  xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <NamedLayer>
+    <Name>style_geomarketing</Name>
+    <UserStyle>
+      <Title>Geomarketing Zone (ZCTA)</Title>
+      <FeatureTypeStyle>
+        <Rule>
+          <Name>Target Area</Name>
+          <Title>Suggested Region (High Income)</Title>
+          <LineSymbolizer>
+            <Stroke>
+              <!-- Line color (Vibrant Blue) -->
+              <CssParameter name="stroke">#1E90FF</CssParameter>
+              <!-- Line thickness -->
+              <CssParameter name="stroke-width">3</CssParameter>
+              <!-- Optional: Dashed effect. If you want a solid line, delete the line below -->
+              <CssParameter name="stroke-dasharray">5 2</CssParameter>
+            </Stroke>
+          </LineSymbolizer>
+        </Rule>
+      </FeatureTypeStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>

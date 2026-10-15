@@ -1,0 +1,75 @@
+# ==============================================================================
+# BootcampGIS GeoAI Stack — Git Ignore Rules
+# ==============================================================================
+
+# --- SECRETS & CREDENTIALS (CRITICAL) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.cert
+*.p12
+*.pfx
+secrets.json
+
+# --- BINARIES & EXECUTABLES ---
+*.exe
+cloudflared.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.msi
+
+# --- VIRTUAL ENVIRONMENTS ---
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+*.egg
+
+# --- PYTHON CACHES & COMPILED ARTIFACTS ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- OPERATING SYSTEM ARTIFACTS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# --- IDE & EDITOR CONFIGURATIONS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# --- LOGS & DIAGNOSTICS ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- HEAVY RAW DATA DUMPS (Optional safety) ---
+# Allow tracking of prompts, notebooks, and complementary curriculum materials
+# while preventing accidental commit of heavy spatial dumps / raw imagery
+*.parquet
+*.gpkg
+*.geotiff
+*.tif
+*.tiff

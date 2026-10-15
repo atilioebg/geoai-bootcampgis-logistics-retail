@@ -1,0 +1,14 @@
+Act as a Senior GeoAI Architect. We are provisioning our Enterprise GeoStack
+Please implement the following:
+	1. Create in the `.env`  the environmental variables (if it doesn't exist) `DB_USER=postgres`, `DB_NAME=bootcampgis`, `DB_PASSWORD=12345`, and `GEOSERVER_ADMIN_PASS=mygeoserverpass`.
+	2. Create a Custom Dockerfile in `scripts/geostack/postgis/Dockerfile`. It must use `FROM postgis/postgis:16-3.4`. Then it must install build dependencies (`build-essential`, `git`, `postgresql-server-dev-16`, etc). Finally, it must `git clone` and `make install` both `pgvector` (v0.6.2) and `apache/age` (PG16 branch).
+	3. Create `scripts/geostack/docker-compose.yml`.
+	4. Define a private `networks` named `geobot_network`.
+	5. Define service `db`. Instead of a raw image, use `build: ./postgis`. Expose port `5432:5432`. Inject `POSTGRES_USER`, `POSTGRES_DB`, and `POSTGRES_PASSWORD` using `.env`. Add a named volume `pgdata:/var/lib/postgresql/data`. Add a `healthcheck` testing `pg_isready`.
+	6. Define service `geoserver` with image `kartoza/geoserver:latest`. Expose port `8080:8080`. Connect it to `geobot_network`. Inject `GEOSERVER_ADMIN_PASSWORD`. CRITICAL: Also inject the PostGIS connection variables (`POSTGRES_HOST=db`, `POSTGRES_PORT=5432`, `POSTGRES_USER`, `POSTGRES_PASS`, `POSTGRES_DB`) using the `.env` variables so GeoServer can talk to the database!
+	7. CRITICAL: Add `depends_on` in `geoserver` pointing to `db` with `condition: service_healthy` to prevent boot crashes.
+	8. Add a named volume `gsdata:/opt/geoserver/data_dir` for the geoserver.
+	9. Output the terminal commands to run this stack (`docker compose up -d --build`) and perform the health test (`docker compose ps`).
+    10. Create the project README.md with these commands and any other information relevant to the project
+
+	

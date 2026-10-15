@@ -1,0 +1,22 @@
+# =====================================================================
+# GeoAI Bootcamp - Lesson 1: Google Cloud CLI Commands Cheat Sheet
+# =====================================================================
+
+# Step 1: Authenticate your Google account in the local terminal
+# (Note: If you are using Cloud Shell directly from the browser, this step is optional)
+gcloud auth login
+
+# Step 2: Connect the terminal to your specific project
+# (Remember to replace the ID below with YOUR project's ID)gcloud config set project 
+gcloud config set project [YOUR_PROJECT_ID]
+
+# Step 3: Enable the required Google Maps Platform services
+gcloud services enable geocoding-backend.googleapis.com places.googleapis.com routes.googleapis.com static-maps-backend.googleapis.com
+
+# Step 4: Create the API Key with security restrictions
+# Copy the value returned in the "keyString" line (which starts with AIzaSy...) and paste it into your .env file
+gcloud services api-keys create --display-name="GCP_API_KEYS" \
+    --api-target=service=geocoding-backend.googleapis.com \
+    --api-target=service=places.googleapis.com \
+    --api-target=service=routes.googleapis.com \
+    --api-target=service=static-maps-backend.googleapis.com

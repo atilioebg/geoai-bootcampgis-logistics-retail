@@ -1,0 +1,12 @@
+Act as a Senior Python Frontend Developer. 
+We need to build a Streamlit interface that connects to our LangGraph Swarm.
+	1. File Initialization: Create `src/frontend/app.py`.
+	2. Master Layout: Use `st.set_page_config(layout="wide")`. Build a native `st.sidebar` for global options and a 'Restart Session' button. Split the main screen into a 75/25 layout using `col_map, col_chat = st.columns([3, 1])`.
+	3. Session Memory: Initialize `st.session_state.messages` and `st.session_state.frontend_payload`. The Sidebar 'Restart' button must clear both to reset the dashboard.
+	4. Chat Interface: Build the chat UI strictly inside the right column (`col_chat`). Do not put the chat in the center of the screen.
+	5. LangGraph Integration: Import our compiled graph. When the user submits a message in the chat column, invoke the graph by passing `{"question": user_input}` into the `SwarmState`.
+	6. Agent Streaming (The Glass-Box): Do not just wait for the final answer. Use `graph.stream()` and `st.status("Agentes Trabalhando...")` inside the chat column to stream the internal events live. Print when the Planner routes, the Worker queries, and the Reviewer validates.
+	7. Placeholder for Map: Inside `col_map` (the left column), just put a temporary placeholder `st.info("Map will be rendered here")`. We will handle GeoServer in the next step.
+	8. Terminal Execution: Provide instructions in the code comments on how to run this app locally (`streamlit run src/frontend/app.py`). The developer must run this in the terminal to visually confirm the 75/25 layout and chat functionality work.
+	9. Pytest Coverage: Create `tests/unit/test_app_layout.py`. Use the official `streamlit.testing` framework (or standard mocks) to verify that `st.session_state` initializes correctly when the app loads.
+	

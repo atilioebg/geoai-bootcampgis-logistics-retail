@@ -1,0 +1,8 @@
+Act as a Senior GeoAI Software Engineer. I need to build a fundamental 'Hello World' agent using LangGraph to demonstrate graph-based routing to the audience.
+
+Please create a script at src/agent/hello_world.py following these architectural steps: 
+	1. State Definition: Create a simple shared state structure (TypedDict) named AgentState. It should store the user_input and the bot_response. 
+	2. Model Integration: Instantiate the Google Gemini language model (version 3.5 flash). Ensure it securely loads environment variables from our .env file so we don't expose API keys. 
+	3. Graph Nodes: Implement two distinct nodes: a primary chat node that passes the user's input to the LLM and records the response, and a static goodbye node that simply returns a polite farewell message without consuming LLM tokens. 
+	4. Conditional Routing: Create a routing function that analyzes the user's input. If the input contains closing words like 'bye', 'exit', or 'quit', route the execution to the goodbye node. Otherwise, route it to the LLM chat node. 
+	5. Execution Entrypoint: Compile the graph and add a basic interactive terminal loop at the end of the script so we can chat with the agent and test both routing paths."

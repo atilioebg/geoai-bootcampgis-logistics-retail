@@ -1,0 +1,10 @@
+Act as a Senior GeoAI Software Engineer. We need to upgrade our existing 'Hello World' LangGraph agent to support dynamic tool calling and intent recognition.
+Please implement the following in src/agent/hello_world.py (or your main agent script): 
+	1. Import the get_route_distance_time tool from src.agent.tools.api_tools. 
+	2. Update the LLM instantiation to use .bind_tools([get_route_distance_time]). 
+	3. Update the agent's System Message (Prompt) to include Intent Mapping. Add this instruction: 'If the user's intent is to determine a route, distance, or travel time, you MUST use the get_route_distance_time tool.' 
+	4. Import ToolNode from langgraph.prebuilt and create a tool_node containing our tool. 
+	5. Update the LangGraph builder: add the tool_node to the graph, and add a conditional edge from the LLM node (tools_condition) that routes to either the tool_node or END based on the LLM's decision. 
+	6. Add a quick __main__ execution block asking the agent: 'What is the driving distance between Times Square and Central Park?' to prove the routing works. 
+	7. Create robust unit tests in a new file (e.g., tests/unit/test_hello_world_agent.py) using pytest to verify that the agent correctly routes to the ToolNode when the intent matches, and routes to END when it's a general question. Use unittest.mock.patch to mock the LLM or API calls if necessary to avoid consuming credits. 
+	8. IMPORTANT: At the very end of your response, clearly present the final System Prompt (System Message) that you created for the agent in a markdown block, so I can review the exact Intent Mapping you wrote.

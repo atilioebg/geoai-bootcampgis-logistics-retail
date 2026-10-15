@@ -1,0 +1,10 @@
+Act as a Senior GeoAI Architect. We need to build our robust database connection manager using SQLAlchem
+Please implement the following
+	1. Create `src/agent/db_engine.py`
+	2. Define `class DBEngine:`
+	3. In `__init__`, load `.env` variables and construct the `DATABASE_URL`
+	4. Initialize the connection using `create_engine` with explicit connection pooling to prevent agent crashes. Set `pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`, and `pool_recycle=3600`
+	5. Create an `init_extensions(self)` method that executes raw SQL to activate all compiled extensions: `postgis`, `vector`, and `age`. CRITICAL: You must use `with self.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:` because Apache AGE (`LOAD 'age';` and `SET search_path = ag_catalog, public;`) will crash if executed inside a standard transaction block!
+	6. Review the entire project (especially `src/agent/tools/spatial_tools.py` and `src/agent/tools/rag_tools.py`) and strictly migrate ANY existing Raw SQL strings to use SQLAlchemy ORM (and GeoAlchemy2) leveraging the new `DBEngine`. No Raw SQL execution should remain outside of extension initialization
+	7. Create robust unit and security tests in `tests/unit/test_db_engine.py` to validate CRUD operations and explicitly test that SQLAlchemy prevents SQL Injection (e.g., test a malicious input like `'; DROP TABLE users;--`)
+	8. Add a `__main__` block to test the connection by instantiating `DBEngine` and printing "Connection Pool successfully initialized!"

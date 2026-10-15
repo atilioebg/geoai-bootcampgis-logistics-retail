@@ -1,0 +1,15 @@
+Act as a Senior GeoAI Architect. We are building an Actor-Critic Swarm using LangGraph. We need to define the shared state and create the Planner node.
+
+Read the current project structure, focusing on the agent (src/agent/hello_world.py), and prepare to refactor it according to the new multi-agent rules. 
+The old monolith agent architecture will be replaced by this new Swarm.
+
+Please implement the following: 
+	1. Create src/agent/swarm_state.py. Define a SwarmState using TypedDict containing the following keys: question (str), plan (list of strings representing tool names to run), draft_response (str), review_feedback (str), review_status (str), and loop_count (int). 
+	2. Create src/agent/agents/planner.py. Define a Pydantic schema PlannerOutput containing a plan (List[str]). 
+	3. In planner.py, define a planner_node(state: SwarmState) -> dict. This node must use the LLM with .with_structured_output(PlannerOutput). 
+	4. The Planner's system prompt must instruct the LLM to analyze the user's question and determine which of our 4 spatial/rag tools (calculate_optimal_logistics_hub, find_geomarketing_gaps, search_semantic_reviews, find_infrastructure_shortest_path) are needed to answer it, returning them as a list in the plan. 
+	5. The planner_node should return a dictionary updating the state with the generated plan. 
+	6. Add a __main__ block in planner.py to test it independently with a mocked state containing a complex question, printing the resulting plan to the terminal. 
+	7. Create a robust Pytest unit test suite in tests/unit/test_planner.py to validate that the Planner correctly interprets intent and returns a well-structured list of tool  names in its output. 
+	8. Include a comment or docstring explicitly stating the Graph Flow: The Planner is the absolute entry point of the swarm. It receives the user question exactly once, generates the plan, and passes control forward. It never receives feedback or loops back (the cyclical loop happens only between Worker and Reviewer). 
+	9. Upon finishing the code, present a summary highlighting the SwarmState schema, a Mermaid flowchart illustrating the Planner's role within the new Swarm architecture, the Planner's System Prompt, and any crucial architectural decisions the instructor should mention to the students.

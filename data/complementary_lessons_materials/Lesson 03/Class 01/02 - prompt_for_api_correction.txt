@@ -1,0 +1,12 @@
+Act as a Senior Python Engineer. The api_tools.py script we just created is using the old Google Maps Directions API (https://maps.googleapis.com/maps/api/directions/json). 
+However, our GCP API Key is only restricted and enabled for the modern Routes API v2.
+
+Please refactor the get_route_distance_time tool to use the modern Google Routes API (https://routes.googleapis.com/directions/v2:computeRoutes).
+
+Ensure you implement these mandatory changes: 
+	1. Change the HTTP method from GET to POST. 
+	2. Pass the parameters as a JSON payload (travelMode: DRIVE, origin, and destination). 
+	3. Include the required headers: X-Goog-Api-Key and X-Goog-FieldMask (requesting routes.distanceMeters,routes.duration). 
+	4. Update the JSON parsing logic, as the new API returns distanceMeters (integer) and duration (string with 's'). Convert them to readable formats (Kilometers and Minutes) before returning the dictionary. Do not change the __main__ testing block."
+	
+	
