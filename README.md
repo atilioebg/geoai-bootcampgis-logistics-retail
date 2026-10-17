@@ -1,5 +1,14 @@
 # BootcampGIS — GeoAI Stack
 
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![Orchestration: LangGraph](https://img.shields.io/badge/Orchestration-LangGraph%20%7C%20Actor--Critic-orange.svg)](https://langchain-ai.github.io/langgraph/)
+[![LLM: Google Gemini](https://img.shields.io/badge/LLM-Google%20Gemini%201.5%20Pro-blueviolet.svg)](https://deepmind.google/technologies/gemini/)
+[![GeoStack: PostGIS](https://img.shields.io/badge/GeoStack-PostgreSQL%2016%20%2B%20PostGIS%203.4-green.svg)](https://postgis.net/)
+[![Vector: pgvector](https://img.shields.io/badge/Vector-pgvector%20v0.6-lightgrey.svg)](https://github.com/pgvector/pgvector)
+[![Graph: Apache AGE](https://img.shields.io/badge/Graph-Apache%20AGE-red.svg)](https://age.apache.org/)
+[![UI: Streamlit](https://img.shields.io/badge/UI-Streamlit%20%2B%20Folium-ff4b4b.svg)](https://streamlit.io/)
+
+
 Welcome to the **BootcampGIS GeoAI Stack** repository! Developed by **Dr. Atilio Efrain Bica Grondona** for the **BootcampGIS GeoAI: Logistics & Retail Site Selection** curriculum, this project combines a state-of-the-art Multi-Agent AI system (Actor-Critic Swarm) with a robust enterprise spatial database infrastructure (PostGIS + pgvector + Apache AGE) and an interactive web mapping dashboard (Streamlit + Folium) to solve complex geospatial problems.
 
 ---
